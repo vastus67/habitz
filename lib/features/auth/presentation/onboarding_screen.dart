@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habitz/core/database/database_provider.dart';
 import 'package:habitz/core/utils/id_generator.dart';
@@ -546,19 +547,87 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _heroVisual(IconData icon) {
     return Container(
-      height: 120,
+      height: 146,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0x4DC6FF00), Color(0x260B0F0C)],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SvgPicture.asset(
+              _heroAssetForIcon(icon),
+              fit: BoxFit.cover,
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0x66000000)],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              top: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xCC0B0F0C),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0x44FFFFFF)),
+                ),
+                child: const Text(
+                  'MOVE • TRAIN • REPEAT',
+                  style: TextStyle(
+                    fontSize: 10,
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 14,
+              bottom: 12,
+              child: Container(
+                height: 42,
+                width: 42,
+                decoration: const BoxDecoration(
+                  color: Color(0xD8C6FF00),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.black, size: 20),
+              ),
+            ),
+          ],
         ),
       ),
-      child: Center(
-        child: Icon(icon, color: AppTheme.accent, size: 48),
-      ),
     );
+  }
+
+  String _heroAssetForIcon(IconData icon) {
+    if (icon == Icons.track_changes_rounded ||
+        icon == Icons.insights_rounded ||
+        icon == Icons.notifications_active_rounded) {
+      return 'assets/images/workout_splash_2.svg';
+    }
+    if (icon == Icons.account_circle_rounded ||
+        icon == Icons.check_circle_rounded ||
+        icon == Icons.local_fire_department_rounded) {
+      return 'assets/images/workout_splash_3.svg';
+    }
+    return 'assets/images/workout_splash_1.svg';
   }
 
   String _goalLabel(OnboardingGoal goal) {
