@@ -1,0 +1,141 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:habitz/core/seed/bootstrap_provider.dart';
+import 'package:habitz/features/analytics/presentation/analytics_screen.dart';
+import 'package:habitz/features/auth/presentation/onboarding_screen.dart';
+import 'package:habitz/features/dashboard/presentation/home_screen.dart';
+import 'package:habitz/features/habits/presentation/habits_screen.dart';
+import 'package:habitz/features/profile/presentation/profile_screen.dart';
+import 'package:habitz/features/profile/providers/profile_provider.dart';
+import 'package:habitz/features/workouts/presentation/exercise_execution_screen.dart';
+import 'package:habitz/features/workouts/presentation/workout_day_screen.dart';
+import 'package:habitz/features/workouts/presentation/workout_plan_detail_screen.dart';
+import 'package:habitz/features/workouts/presentation/workout_plans_screen.dart';
+import 'package:habitz/features/workouts/presentation/workout_summary_screen.dart';
+import 'package:habitz/theme/app_theme.dart';
+
+class HabitzApp extends ConsumerWidget {
+  const HabitzApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bootstrap = ref.watch(appBootstrapProvider);
+    if (bootstrap.isLoading) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    final profileState = ref.watch(profileControllerProvider);
+    if (profileState.isLoading) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    final hasCompletedOnboarding =
+      (profileState.valueOrNull?.onboardingCompleted ??
+        ref.watch(hasCompletedOnboardingProvider)) ==
+      true;
+    final router = GoRouter(
+      initialLocation: hasCompletedOnboarding ? '/home' : '/onboarding',
+      routes: [
+        GoRoute(
+          path: '/onboarding',
+          builder: (_, __) => const OnboardingScreen(),
+        ),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) =>
+              MainBottomShell(navigationShell: navigationShell),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(path: '/plans', builder: (_, __) => const WorkoutPlansScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(path: '/habits', builder: (_, __) => const HabitsScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: '/analytics',
+                builder: (_, __) => const AnalyticsOverviewScreen(),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+            ]),
+          ],
+        ),
+        GoRoute(
+          path: '/workout-plan/:id',
+          builder: (context, state) =>
+              WorkoutPlanDetailScreen(planId: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/workout-day/:planId/:dayId',
+          builder: (context, state) => WorkoutDayScreen(
+            planId: state.pathParameters['planId']!,
+            dayId: state.pathParameters['dayId']!,
+          ),
+        ),
+        GoRoute(
+          path: '/exercise/:planId/:dayId/:exerciseIndex',
+          builder: (context, state) => ExerciseExecutionScreen(
+            planId: state.pathParameters['planId']!,
+            dayId: state.pathParameters['dayId']!,
+            exerciseIndex:
+                int.tryParse(state.pathParameters['exerciseIndex'] ?? '0') ?? 0,
+          ),
+        ),
+        GoRoute(
+          path: '/workout-summary',
+          builder: (context, state) => WorkoutSummaryScreen(
+            args: state.extra is WorkoutSummaryArgs ? state.extra as WorkoutSummaryArgs : null,
+          ),
+        ),
+      ],
+    );
+
+    return MaterialApp.router(
+      title: 'Habitz',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkTheme,
+      routerConfig: router,
+    );
+  }
+}
+
+class MainBottomShell extends StatelessWidget {
+  const MainBottomShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (index) {
+          navigationShell.goBranch(index,
+              initialLocation: index == navigationShell.currentIndex);
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+          NavigationDestination(
+              icon: Icon(Icons.fitness_center_outlined), label: 'Plans'),
+          NavigationDestination(icon: Icon(Icons.task_alt), label: 'Habits'),
+          NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Analytics'),
+          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+}
