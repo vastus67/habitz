@@ -1,0 +1,103 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 146 44% 5%;
+        --foreground: 0 0% 98%;
+        --card: 148 35% 9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 148 35% 9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 84 81% 59%;
+        --primary-foreground: 145 40% 8%;
+        --secondary: 154 23% 14%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 153 21% 12%;
+        --muted-foreground: 0 0% 70%;
+        --accent: 153 21% 12%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 100% / 0.12;
+        --input: 0 0% 100% / 0.12;
+        --ring: 84 81% 59%;
+        --chart-1: 84 81% 59%;
+        --chart-2: 197 92% 61%;
+        --chart-3: 25 95% 60%;
+        --chart-4: 142 69% 58%;
+        --chart-5: 45 93% 60%;
+        --radius: 1rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        @apply bg-background text-foreground;
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Manrope", sans-serif;
+        background-color: hsl(var(--background));
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: "Space Grotesk", sans-serif;
+        letter-spacing: -0.03em;
+    }
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+    }
+    ::selection {
+        background: rgba(190, 242, 100, 0.35);
+        color: white;
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
+
+#root {
+    min-height: 100vh;
+}

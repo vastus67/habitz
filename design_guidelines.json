@@ -1,0 +1,157 @@
+{
+  "project_name": "Habitz",
+  "app_type": "Mobile-First Web App (PWA)",
+  "target_audience": "Fitness-focused consumers",
+  "design_philosophy": {
+    "archetype": "The Performance Pro",
+    "vibe": "Elite Athleticism, Dark Mode, Precision, High Contrast",
+    "principles": [
+      "Mobile-First Layouts: Stacked columns, touch-friendly targets (min 44px).",
+      "Dense but Breathing: Tight data density (gap-4) but generous container padding (p-6).",
+      "Dark Mode Default: OLED-friendly blacks with neon accents.",
+      "Motion: Smooth page transitions, staggered entrance for lists."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Manrope",
+      "body": "Manrope"
+    },
+    "weights": {
+      "headings": "800 (ExtraBold)",
+      "subheadings": "600 (SemiBold)",
+      "body": "400 (Regular)"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl tracking-tighter leading-none",
+      "h2": "text-3xl tracking-tight",
+      "h3": "text-2xl tracking-tight",
+      "body": "text-base leading-relaxed text-muted-foreground",
+      "label": "text-xs font-bold uppercase tracking-widest text-muted-foreground"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#09090b",
+      "foreground": "#fafafa",
+      "card": "#18181b",
+      "card_foreground": "#fafafa",
+      "primary": "#bef264",
+      "primary_foreground": "#000000",
+      "secondary": "#27272a",
+      "secondary_foreground": "#fafafa",
+      "muted": "#27272a",
+      "muted_foreground": "#a1a1aa",
+      "accent": "#27272a",
+      "accent_foreground": "#fafafa",
+      "destructive": "#ef4444",
+      "border": "#27272a",
+      "input": "#27272a",
+      "ring": "#bef264"
+    },
+    "usage": {
+      "brand": "Primary (Lime) for CTAs, Active States, and Progress Bars.",
+      "surface": "Card (Zinc 900) for containers.",
+      "background": "Background (Zinc 950) for the main canvas.",
+      "text": "Foreground (Zinc 50) for primary text, Muted Foreground (Zinc 400) for secondary."
+    }
+  },
+  "layout": {
+    "container": "max-w-md mx-auto min-h-screen bg-background relative overflow-hidden shadow-2xl",
+    "spacing": {
+      "page_padding": "p-6",
+      "section_gap": "gap-8",
+      "item_gap": "gap-4"
+    },
+    "grid_strategy": "Bento Grid for Dashboard (mix of 1x1, 2x1, 2x2 cells). Stack for Lists."
+  },
+  "components": {
+    "library": "Shadcn/UI",
+    "customizations": [
+      "Buttons: Rounded-full (pill) for primary actions, Rounded-lg for secondary.",
+      "Cards: No shadow, 1px border (border-white/10), rounded-xl.",
+      "Inputs: Height 56px (h-14) for touch targets, filled style (bg-secondary/50).",
+      "Navigation: Bottom Tab Bar (Fixed) with blur effect (backdrop-blur-xl)."
+    ],
+    "paths": {
+      "ui": "/app/frontend/src/components/ui",
+      "components": "/app/frontend/src/components"
+    }
+  },
+  "features": {
+    "auth": {
+      "endpoints": ["/api/auth/login", "/api/auth/register", "/api/auth/google/session"],
+      "design": "Minimalist form, centered, large inputs."
+    },
+    "onboarding": {
+      "endpoints": ["/api/onboarding/recommendations", "/api/onboarding/complete"],
+      "design": "Multi-step wizard (Carousel or Stepper). Questions: Gender, Fitness Level, Goal. Result: Plan Selection."
+    },
+    "dashboard": {
+      "endpoints": ["/api/dashboard"],
+      "design": "Bento Grid. 'Streak' (Fire icon), 'Today's Workout' (Card with Image), 'Habits' (Checklist)."
+    },
+    "workouts": {
+      "endpoints": ["/api/plans", "/api/plans/{id}", "/api/workouts/start", "/api/workouts/active", "/api/workouts/complete"],
+      "design": "List of Cards with Hero Images. Active Workout: Timer overlay, big checkboxes for sets."
+    },
+    "habits": {
+      "endpoints": ["/api/habits", "/api/habits/{id}/today"],
+      "design": "Simple list items with swipe-to-complete or tap-to-toggle."
+    },
+    "analytics": {
+      "endpoints": ["/api/analytics"],
+      "design": "Bar Charts (Recharts) showing completion trends."
+    }
+  },
+  "assets": {
+    "icons": "Lucide React",
+    "images": [
+      {
+        "category": "hero",
+        "url": "https://images.unsplash.com/photo-1695918425283-eb385c012b7a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHw0fHxtYW4lMjBneW0lMjB3ZWlnaHRsaWZ0aW5nJTIwcnVubmluZyUyMHRyYWNrJTIwaGVhbHRoeSUyMGZvb2QlMjBib3dsJTIwY3ljbGlzdHxlbnwwfHx8fDE3NzM0MDM1MjB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Man running outdoors (Onboarding/Hero)"
+      },
+      {
+        "category": "workout_strength",
+        "url": "https://images.unsplash.com/photo-1635863840074-4f967862da03?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwd29ya291dCUyMGd5bSUyMG1hbiUyMHdvbWFuJTIweW9nYSUyMHJ1bnxlbnwwfHx8fDE3NzM0MDM1MDh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Woman with dumbbells (Strength Plan)"
+      },
+      {
+        "category": "workout_yoga",
+        "url": "https://images.unsplash.com/photo-1726195221496-28657f8cf3de?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwzfHxmaXRuZXNzJTIwd29ya291dCUyMGd5bSUyMG1hbiUyMHdvbWFuJTIweW9nYSUyMHJ1bnxlbnwwfHx8fDE3NzM0MDM1MDh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Woman doing yoga/handstand (Flexibility Plan)"
+      },
+      {
+        "category": "workout_cardio",
+        "url": "https://images.unsplash.com/photo-1695918425489-6c56df5eff9b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwyfHxtYW4lMjBneW0lMjB3ZWlnaHRsaWZ0aW5nJTIwd29ya291dCUyMGd5bSUyMG1hbiUyMHdvbWFuJTIweW9nYSUyMHJ1bnxlbnwwfHx8fDE3NzM0MDM1MjB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Man playing tennis/cardio (Cardio Plan)"
+      },
+      {
+        "category": "food",
+        "url": "https://images.unsplash.com/photo-1562771380-1b70b51fd6a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwxfHxtYW4lMjBneW0lMjB3ZWlnaHRsaWZ0aW5nJTIwcnVubmluZyUyMHRyYWNrJTIwaGVhbHRoeSUyMGZvb2QlMjBib3dsJTIwY3ljbGlzdHxlbnwwfHx8fDE3NzM0MDM1MjB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Man doing rope exercise (General Fitness)"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "1. UPDATE tailwind.config.js and index.css with the colors defined above.",
+    "2. INSTALL required packages: `lucide-react`, `recharts`, `date-fns`, `framer-motion`, `clsx`, `tailwind-merge`.",
+    "3. CREATE a `Layout` component that includes a fixed Bottom Navigation Bar.",
+    "4. IMPLEMENT pages in `src/pages/` mapped to the routes.",
+    "5. USE `fetch` or `axios` to connect to the backend endpoints.",
+    "6. USE `sonner` for all success/error notifications.",
+    "7. ENSURE all interactive elements have `data-testid`."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic outputs. Avoid this.",
+    "Dark colors look good when used independently without gradients.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Prioritize using pre-existing components from src/components/ui.",
+    "Use sonner for toasts.",
+    "Use Lucide React for icons.",
+    "Use Recharts for charts."
+  ]
+}
