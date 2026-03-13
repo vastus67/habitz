@@ -7,58 +7,92 @@ class HabitTile extends StatelessWidget {
   const HabitTile({
     super.key,
     required this.habit,
-    required this.onLog,
+    required this.currentValue,
+    required this.onMarkDone,
+    this.onQuickAdd,
+    this.onSetProgress,
+    this.quickAddLabel,
     this.onDelete,
-    this.onTrackSteps,
   });
 
   final HabitModel habit;
-  final VoidCallback onLog;
+  final double currentValue;
+  final VoidCallback onMarkDone;
+  final VoidCallback? onQuickAdd;
+  final VoidCallback? onSetProgress;
+  final String? quickAddLabel;
   final VoidCallback? onDelete;
-  final VoidCallback? onTrackSteps;
 
   @override
   Widget build(BuildContext context) {
+    final progress = habit.targetValue <= 0 ? 0.0 : (currentValue / habit.targetValue).clamp(0.0, 1.0);
+    final completed = currentValue >= habit.targetValue;
+
     return NeoCard(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 40,
-            width: 40,
-            decoration: const BoxDecoration(
-              color: AppTheme.accent,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.bolt, color: Colors.black),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(habit.title, style: Theme.of(context).textTheme.titleLarge),
-                Text(
-                  '${habit.type.name} • Target ${habit.targetValue} ${habit.unit}',
-                  style: Theme.of(context).textTheme.bodySmall,
+          Row(
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: const BoxDecoration(
+                  color: AppTheme.accent,
+                  shape: BoxShape.circle,
                 ),
-              ],
+                child: const Icon(Icons.bolt, color: Colors.black),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(habit.title, style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      '${currentValue.toStringAsFixed(0)} / ${habit.targetValue.toStringAsFixed(0)} ${habit.unit}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              if (onSetProgress != null)
+                IconButton(
+                  tooltip: 'Set progress',
+                  onPressed: onSetProgress,
+                  icon: const Icon(Icons.edit_outlined, color: AppTheme.accent),
+                ),
+              IconButton(
+                tooltip: 'Mark done',
+                onPressed: onMarkDone,
+                icon: const Icon(Icons.check_circle_outline, color: AppTheme.accent),
+              ),
+              if (onDelete != null)
+                IconButton(
+                  tooltip: 'Delete habit',
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(10),
+            backgroundColor: AppTheme.cardSoft,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              completed ? AppTheme.accent : Colors.lightBlueAccent,
             ),
           ),
-          if (onTrackSteps != null)
-            IconButton(
-              tooltip: 'Track steps',
-              onPressed: onTrackSteps,
-              icon: const Icon(Icons.directions_walk, color: AppTheme.accent),
+          if (onQuickAdd != null) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: onQuickAdd,
+              icon: const Icon(Icons.add),
+              label: Text(quickAddLabel ?? 'Add progress'),
             ),
-          IconButton(
-            onPressed: onLog,
-            icon: const Icon(Icons.check_circle_outline, color: AppTheme.accent),
-          ),
-          if (onDelete != null)
-            IconButton(
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline),
-            )
+          ],
         ],
       ),
     );

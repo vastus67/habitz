@@ -7,6 +7,18 @@ final habitsProvider = StreamProvider<List<HabitModel>>((ref) {
   return ref.watch(habitsRepositoryProvider).watchHabits();
 });
 
+final habitTodayProgressProvider = StreamProvider.family<HabitLogModel?, String>((ref, habitId) {
+  final now = DateTime.now();
+  return ref.watch(habitsRepositoryProvider).watchLogsForHabit(habitId).map((logs) {
+    for (final log in logs) {
+      if (_isSameDay(log.date, now)) {
+        return log;
+      }
+    }
+    return null;
+  });
+});
+
 final habitsControllerProvider = Provider<HabitsController>((ref) {
   return HabitsController(ref);
 });
@@ -52,10 +64,21 @@ class HabitsController {
   }
 
   Future<void> logDone(HabitModel habit, {double? value}) async {
-    await logProgress(habit, value ?? habit.targetValue);
+    await setProgress(habit, value ?? habit.targetValue);
   }
 
-  Future<void> logProgress(HabitModel habit, double value) async {
+  Future<void> setProgress(HabitModel habit, double value) async {
+    await _upsertToday(habit, value);
+  }
+
+  Future<void> addProgress(HabitModel habit, double delta) async {
+    final now = DateTime.now();
+    final existing = await _ref.read(habitsRepositoryProvider).fetchLogForHabitOnDate(habit.id, now);
+    final nextValue = ((existing?.value ?? 0) + delta).clamp(0, double.infinity).toDouble();
+    await _upsertToday(habit, nextValue);
+  }
+
+  Future<void> _upsertToday(HabitModel habit, double value) async {
     final now = DateTime.now();
     final id = IdGenerator.deterministic(
       'habitLog',
@@ -71,4 +94,8 @@ class HabitsController {
           ),
         );
   }
+}
+
+bool _isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
 }

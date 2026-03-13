@@ -18,12 +18,19 @@ class HabitsScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           itemBuilder: (_, index) {
             final habit = items[index];
+            final todayProgress = ref.watch(habitTodayProgressProvider(habit.id));
+            final currentValue = todayProgress.valueOrNull?.value ?? 0;
+            final tracker = _trackerTypeFor(habit);
+
             return HabitTile(
               habit: habit,
-              onLog: () => ref.read(habitsControllerProvider).logDone(habit),
-              onTrackSteps: _isWalkingHabit(habit)
-                  ? () => _showStepsTrackerDialog(context, ref, habit)
+              currentValue: currentValue,
+              onMarkDone: () => ref.read(habitsControllerProvider).logDone(habit),
+              onSetProgress: () => _showSetProgressDialog(context, ref, habit, currentValue),
+              onQuickAdd: tracker.quickAddAmount > 0
+                  ? () => ref.read(habitsControllerProvider).addProgress(habit, tracker.quickAddAmount)
                   : null,
+              quickAddLabel: tracker.quickAddLabel,
               onDelete: () => ref.read(habitsControllerProvider).deleteHabit(habit.id),
             );
           },
@@ -43,29 +50,39 @@ class HabitsScreen extends ConsumerWidget {
     );
   }
 
-
-
-  bool _isWalkingHabit(HabitModel habit) {
+  _HabitTrackerType _trackerTypeFor(HabitModel habit) {
     final title = habit.title.toLowerCase();
     final unit = habit.unit.toLowerCase();
     final category = habit.category?.toLowerCase() ?? '';
-    return title.contains('walk') || unit.contains('step') || category.contains('walk');
+
+    final isWalking = title.contains('walk') || title.contains('step') || unit.contains('step') || category.contains('walk');
+    if (isWalking) {
+      return const _HabitTrackerType(quickAddAmount: 1000, quickAddLabel: 'Add 1,000 steps');
+    }
+
+    final isWater = title.contains('water') || unit.contains('glass') || unit.contains('cup') || category.contains('hydration');
+    if (isWater) {
+      return const _HabitTrackerType(quickAddAmount: 1, quickAddLabel: 'Add 1 glass');
+    }
+
+    return const _HabitTrackerType(quickAddAmount: 1, quickAddLabel: 'Add 1');
   }
 
-  Future<void> _showStepsTrackerDialog(
+  Future<void> _showSetProgressDialog(
     BuildContext context,
     WidgetRef ref,
     HabitModel habit,
+    double currentValue,
   ) async {
-    final controller = TextEditingController(text: habit.targetValue.toStringAsFixed(0));
+    final controller = TextEditingController(text: currentValue.toStringAsFixed(0));
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Log steps for ${habit.title}'),
+        title: Text('Update ${habit.title}'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'Steps (${habit.unit})'),
+          decoration: InputDecoration(labelText: 'Progress (${habit.unit})'),
         ),
         actions: [
           TextButton(
@@ -77,11 +94,11 @@ class HabitsScreen extends ConsumerWidget {
               final value = double.tryParse(controller.text.trim());
               if (value == null || value < 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Enter a valid step count.')),
+                  const SnackBar(content: Text('Enter a valid number.')),
                 );
                 return;
               }
-              await ref.read(habitsControllerProvider).logProgress(habit, value);
+              await ref.read(habitsControllerProvider).setProgress(habit, value);
               if (context.mounted) {
                 Navigator.pop(context);
               }
@@ -172,4 +189,14 @@ class HabitsScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+class _HabitTrackerType {
+  const _HabitTrackerType({
+    required this.quickAddAmount,
+    required this.quickAddLabel,
+  });
+
+  final double quickAddAmount;
+  final String quickAddLabel;
 }

@@ -65,6 +65,26 @@ class HabitsRepository {
         .go();
   }
 
+
+  Future<HabitLogModel?> fetchLogForHabitOnDate(String habitId, DateTime date) async {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = start.add(const Duration(days: 1));
+    final row = await (_db.select(_db.habitLogEntries)
+          ..where((tbl) => tbl.habitId.equals(habitId))
+          ..where((tbl) => tbl.date.isBetweenValues(start, end))
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null) return null;
+    return HabitLogModel(
+      id: row.id,
+      habitId: row.habitId,
+      date: row.date,
+      value: row.value,
+      completed: row.completed,
+      note: row.note,
+    );
+  }
+
   Stream<List<HabitLogModel>> watchLogsForHabit(String habitId) {
     final query = _db.select(_db.habitLogEntries)
       ..where((tbl) => tbl.habitId.equals(habitId))
