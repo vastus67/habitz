@@ -171,6 +171,8 @@ class WorkoutSessionController extends StateNotifier<ActiveWorkoutSessionState> 
     required String planId,
     required String workoutDayId,
     required int completedExercises,
+    int effort = 7,
+    String? note,
   }) async {
     final started = state.workoutStart ?? DateTime.now();
     final duration = DateTime.now().difference(started).inMinutes.clamp(1, 300);
@@ -182,8 +184,9 @@ class WorkoutSessionController extends StateNotifier<ActiveWorkoutSessionState> 
       date: DateTime.now(),
       completed: true,
       totalTime: duration,
-      perceivedEffort: 7,
+      perceivedEffort: effort,
       completedExercises: completedExercises,
+      note: note,
     );
 
     await _ref.read(plansRepositoryProvider).logWorkoutSession(log);

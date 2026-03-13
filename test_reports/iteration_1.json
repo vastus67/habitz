@@ -1,0 +1,50 @@
+{
+  "summary": "Executed backend contract tests against public URL for auth register/me and sex-based personalization; performed static Flutter auth/deep-link/personalization wiring review.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Flutter onboarding personalization with backend",
+        "issue": "Onboarding screen and plans repository operate on local Drift data and do not call backend /api/onboarding/recommendations or /api/onboarding/complete, so mobile app can diverge from backend personalization contract.",
+        "affected_selectors": [
+          "lib/features/auth/presentation/onboarding_screen.dart",
+          "lib/features/plans/data/plans_repository.dart"
+        ]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_auth_personalization_contract.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Wire Flutter onboarding plan recommendation/complete flow to backend endpoints for source-of-truth personalization parity.",
+    "Decide authoritative source (backend vs local Drift) for plan personalization and keep one contract path.",
+    "Keep deep-link scheme/host aligned across AppConfig, AndroidManifest, and iOS Info.plist when changing OAuth callback."
+  ],
+  "critical_code_review_comments": [
+    "Auth API contract matches current mobile client expectations: register/login/google session return {user, session_token}; /auth/me returns {user} and works with Bearer token.",
+    "Deep-link callback config appears internally consistent (scheme=habitz, host=auth-callback) across Flutter + Android + iOS.",
+    "Primary risk is architectural mismatch: backend personalization exists but Flutter onboarding currently persists local-only personalization and local plan filtering."
+  ],
+  "updated_files": [
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_auth_personalization_contract.py",
+    "/app/test_reports/iteration_1.json"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "N/A (backend-only scope)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 5 backend contract tests passed on public endpoint. No API mock used. Next validation should focus on end-to-end mobile runtime once Flutter SDK/device runner is available, especially onboarding->plans consistency against backend data.",
+  "rca of the issue": "RCA: personalization mismatch risk is caused by split data sources. Backend computes sex-filtered recommendations/plans, while Flutter onboarding and plans listing currently rely on local Drift repository and local profile state. Repro (static): onboarding_screen.dart uses plansRepository.watchPlans(...) and _persistOnboarding() writes local profile/habits/active plan without backend onboarding API calls. Mitigation: route onboarding preference submission and recommendation retrieval through backend APIs, then sync local cache from backend responses."
+}

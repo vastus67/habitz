@@ -84,6 +84,23 @@ class _ExerciseExecutionScreenState extends ConsumerState<ExerciseExecutionScree
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardSoft,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Exercise ${idx + 1} of ${bundle.sets.length}',
+                          style: const TextStyle(
+                            color: AppTheme.accent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Text(exercise?.name ?? 'Exercise', style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: 8),
                       Container(
@@ -124,7 +141,10 @@ class _ExerciseExecutionScreenState extends ConsumerState<ExerciseExecutionScree
                           ref.read(workoutSessionProvider.notifier).updateWeight(double.tryParse(value) ?? 0),
                     ),
                     const SizedBox(height: 10),
-                    Text('Rest timer: ${_restRemaining}s'),
+                    Text(
+                      'Rest timer: ${_restRemaining}s',
+                      style: const TextStyle(color: AppTheme.textSecondary),
+                    ),
                     const SizedBox(height: 8),
                     OutlinedButton(
                       onPressed: _restRemaining > 0 ? null : () => _startRest(workoutExercise.restSeconds),

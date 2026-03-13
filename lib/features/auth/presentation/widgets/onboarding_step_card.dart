@@ -28,15 +28,16 @@ class OnboardingStepCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(34),
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1B2514), Color(0xFF10150F)],
+            colors: [Color(0xFF172015), Color(0xFF0C110D)],
           ),
+          border: Border.all(color: const Color(0x19FFFFFF)),
           boxShadow: const [
             BoxShadow(color: Color(0x44000000), blurRadius: 22, offset: Offset(0, 12)),
           ],
@@ -66,7 +67,7 @@ class OnboardingStepCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
                   title,
-                  style: const TextStyle(fontSize: 31, fontWeight: FontWeight.w700, height: 1.1),
+                  style: const TextStyle(fontSize: 33, fontWeight: FontWeight.w800, height: 1.05),
                 ),
               ),
               const SizedBox(height: 8),
@@ -99,6 +100,7 @@ class OnboardingStepCard extends StatelessWidget {
                       backgroundColor: AppTheme.accent,
                       foregroundColor: Colors.black,
                       minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
                     child: isLoading
                         ? const SizedBox(

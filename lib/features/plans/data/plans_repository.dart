@@ -17,21 +17,6 @@ class PlansRepository {
     int? durationWeeks,
   }) {
     final query = _db.select(_db.workoutPlanEntries);
-    if (sexVariant != null) {
-      query.where(
-        (tbl) => tbl.sexVariant.equals(sexVariant.name) |
-            tbl.sexVariant.equals(SexVariant.unisex.name),
-      );
-    }
-    if (goal != null) {
-      query.where((tbl) => tbl.goal.equals(goal.name));
-    }
-    if (level != null) {
-      query.where((tbl) => tbl.level.equals(level.name));
-    }
-    if (equipment != null) {
-      query.where((tbl) => tbl.equipment.equals(equipment.name));
-    }
     if (daysPerWeek != null) {
       query.where((tbl) => tbl.daysPerWeek.equals(daysPerWeek));
     }
@@ -39,41 +24,85 @@ class PlansRepository {
       query.where((tbl) => tbl.durationWeeks.equals(durationWeeks));
     }
     return query.watch().map(
-          (rows) => rows
-              .map(
-                (row) => WorkoutPlanModel(
-                  id: row.id,
-                  name: row.name,
-                  goal: PlanGoal.values.firstWhere(
-                    (e) => e.name == row.goal,
-                    orElse: () => PlanGoal.strength,
+          (rows) {
+            final plans = rows
+                .map(
+                  (row) => WorkoutPlanModel(
+                    id: row.id,
+                    name: row.name,
+                    goal: PlanGoal.values.firstWhere(
+                      (e) => e.name == row.goal,
+                      orElse: () => PlanGoal.strength,
+                    ),
+                    level: PlanLevel.values.firstWhere(
+                      (e) => e.name == row.level,
+                      orElse: () => PlanLevel.beginner,
+                    ),
+                    sexVariant: SexVariant.values.firstWhere(
+                      (e) => e.name == row.sexVariant,
+                      orElse: () => SexVariant.unisex,
+                    ),
+                    daysPerWeek: row.daysPerWeek,
+                    durationWeeks: row.durationWeeks,
+                    equipment: EquipmentType.values.firstWhere(
+                      (e) => e.name == row.equipment,
+                      orElse: () => EquipmentType.home,
+                    ),
+                    description: row.description,
+                    tags: row.tags.split(',').where((e) => e.isNotEmpty).toList(),
                   ),
-                  level: PlanLevel.values.firstWhere(
-                    (e) => e.name == row.level,
-                    orElse: () => PlanLevel.beginner,
-                  ),
-                  sexVariant: SexVariant.values.firstWhere(
-                    (e) => e.name == row.sexVariant,
-                    orElse: () => SexVariant.unisex,
-                  ),
-                  daysPerWeek: row.daysPerWeek,
-                  durationWeeks: row.durationWeeks,
-                  equipment: EquipmentType.values.firstWhere(
-                    (e) => e.name == row.equipment,
-                    orElse: () => EquipmentType.home,
-                  ),
-                  description: row.description,
-                  tags: row.tags.split(',').where((e) => e.isNotEmpty).toList(),
-                ),
-              )
-              .toList()
-            ..sort((a, b) {
-              final aExact = sexVariant != null && a.sexVariant == sexVariant ? 1 : 0;
-              final bExact = sexVariant != null && b.sexVariant == sexVariant ? 1 : 0;
-              if (aExact != bExact) return bExact.compareTo(aExact);
+                )
+                .where((plan) => _sexCompatible(plan, sexVariant))
+                .where((plan) => _equipmentCompatible(plan, equipment))
+                .toList();
+
+            plans.sort((a, b) {
+              final bySex = _matchWeight(a.sexVariant == sexVariant, b.sexVariant == sexVariant);
+              if (bySex != 0) return bySex;
+
+              final byGoal = _matchWeight(a.goal == goal, b.goal == goal);
+              if (byGoal != 0) return byGoal;
+
+              final byEquipment = _matchWeight(a.equipment == equipment, b.equipment == equipment);
+              if (byEquipment != 0) return byEquipment;
+
+              final byLevel = _levelDistance(a.level, level).compareTo(_levelDistance(b.level, level));
+              if (byLevel != 0) return byLevel;
+
               return a.name.compareTo(b.name);
-            }),
+            });
+
+            return plans;
+          },
         );
+  }
+
+  bool _sexCompatible(WorkoutPlanModel plan, SexVariant? selected) {
+    if (selected == null) return true;
+    return plan.sexVariant == selected || plan.sexVariant == SexVariant.unisex;
+  }
+
+  bool _equipmentCompatible(WorkoutPlanModel plan, EquipmentType? selected) {
+    if (selected == null) return true;
+    switch (selected) {
+      case EquipmentType.none:
+        return plan.equipment == EquipmentType.none;
+      case EquipmentType.home:
+        return plan.equipment == EquipmentType.home || plan.equipment == EquipmentType.none;
+      case EquipmentType.gym:
+        return true;
+    }
+  }
+
+  int _levelDistance(PlanLevel planLevel, PlanLevel? selected) {
+    if (selected == null) return 0;
+    int index(PlanLevel value) => PlanLevel.values.indexOf(value);
+    return (index(planLevel) - index(selected)).abs();
+  }
+
+  int _matchWeight(bool aMatch, bool bMatch) {
+    if (aMatch == bMatch) return 0;
+    return aMatch ? -1 : 1;
   }
 
   Future<WorkoutPlanModel?> getPlan(String planId) async {

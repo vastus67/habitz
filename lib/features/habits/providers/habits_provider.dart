@@ -24,13 +24,6 @@ class HabitsController {
     required List<String> reminders,
     String? category,
   }) async {
-    final profile = await _ref.read(profileRepositoryProvider).fetch();
-    final count = await _ref.read(habitsRepositoryProvider).habitCount();
-    final canCreate = (profile?.proEnabled ?? false) || count < 5;
-    if (!canCreate) {
-      throw Exception('Free tier allows up to 5 habits. Upgrade to Pro for unlimited habits.');
-    }
-
     final now = DateTime.now();
     final id = IdGenerator.deterministic('habit', [title, now.toIso8601String()]);
     final model = HabitModel(

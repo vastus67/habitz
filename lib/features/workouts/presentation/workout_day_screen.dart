@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habitz/core/database/database_provider.dart';
 import 'package:habitz/features/plans/domain/workout_models.dart';
@@ -39,13 +40,57 @@ class WorkoutDayScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             children: [
               NeoCard(
+                padding: EdgeInsets.zero,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(bundle.day.title, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Text('Estimated duration: $estimatedMinutes min'),
-                    Text('Exercises: ${bundle.sets.length}'),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      child: SizedBox(
+                        height: 170,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            SvgPicture.asset(bundle.plan.heroAsset, fit: BoxFit.cover),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [Color(0x12000000), Color(0xB20A0F0B)],
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 18,
+                              right: 18,
+                              bottom: 18,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(bundle.day.title, style: Theme.of(context).textTheme.headlineMedium),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '${bundle.plan.name} • ${bundle.sets.length} exercises',
+                                    style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Row(
+                        children: [
+                          Expanded(child: _WorkoutMeta(label: 'Estimated', value: '$estimatedMinutes min')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _WorkoutMeta(label: 'Exercises', value: '${bundle.sets.length}')),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -119,6 +164,32 @@ class WorkoutDayScreen extends ConsumerWidget {
     if (context.mounted) {
       context.push('/exercise/${bundle.plan.id}/${bundle.day.id}/$index');
     }
+  }
+}
+
+class _WorkoutMeta extends StatelessWidget {
+  const _WorkoutMeta({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSoft,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+          const SizedBox(height: 6),
+          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
   }
 }
 

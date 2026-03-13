@@ -153,21 +153,36 @@ class MainBottomShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) {
-          navigationShell.goBranch(index,
-              initialLocation: index == navigationShell.currentIndex);
-        },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(
-              icon: Icon(Icons.fitness_center_outlined), label: 'Plans'),
-          NavigationDestination(icon: Icon(Icons.task_alt), label: 'Habits'),
-          NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Analytics'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0E1510), AppTheme.background],
+          ),
+        ),
+        child: navigationShell,
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(26),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (index) {
+              navigationShell.goBranch(index,
+                  initialLocation: index == navigationShell.currentIndex);
+            },
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+              NavigationDestination(
+                  icon: Icon(Icons.fitness_center_outlined), label: 'Plans'),
+              NavigationDestination(icon: Icon(Icons.task_alt), label: 'Habits'),
+              NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Analytics'),
+              NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+            ],
+          ),
+        ),
       ),
     );
   }
