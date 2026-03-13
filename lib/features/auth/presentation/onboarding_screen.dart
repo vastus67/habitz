@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:habitz/core/database/database_provider.dart';
-import 'package:habitz/core/utils/id_generator.dart';
 import 'package:habitz/features/auth/providers/auth_provider.dart';
 import 'package:habitz/features/auth/presentation/widgets/onboarding_step_card.dart';
 import 'package:habitz/features/auth/providers/onboarding_state.dart';
-import 'package:habitz/features/habits/domain/habit.dart';
-import 'package:habitz/features/plans/domain/workout_models.dart';
-import 'package:habitz/features/profile/domain/user_profile.dart';
-import 'package:habitz/features/profile/providers/profile_provider.dart';
+import 'package:habitz/features/mobile_sync/mobile_backend_service.dart';
 import 'package:habitz/theme/app_theme.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -25,6 +20,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   final FixedExtentScrollController _wakeController = FixedExtentScrollController(initialItem: 1);
   bool _generationStarted = false;
+  Future<RemoteRecommendations>? _recommendationsFuture;
+  String? _recommendationSignature;
 
   @override
   void dispose() {
@@ -249,21 +246,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _habitsStep(OnboardingState state, OnboardingController controller) {
+    final recommendationsFuture = _ensureRecommendations(state, controller);
     return OnboardingStepCard(
       title: 'Recommended habits for you',
       subtitle: 'Toggle what you want to start with.',
       visual: _heroVisual(Icons.task_alt_rounded),
-      child: Column(
-        children: [
-          for (final habit in HabitRecommendation.values) ...[
-            OnboardingOptionCard(
-              title: _habitLabel(habit),
-              selected: state.selectedHabits.contains(habit),
-              onTap: () => controller.toggleHabit(habit),
-            ),
-            const SizedBox(height: 10),
-          ]
-        ],
+      child: FutureBuilder<RemoteRecommendations>(
+        future: recommendationsFuture,
+        builder: (context, snapshot) {
+          final recommendations = snapshot.data;
+          final habits = recommendations?.habits ?? const <RemoteHabitRecommendation>[];
+          if (recommendationsFuture == null) {
+            return const Text(
+              'Complete your core profile first to unlock backend-powered habit recommendations.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting && habits.isEmpty) {
+            return const Center(child: CircularProgressIndicator(color: AppTheme.accent));
+          }
+          if (snapshot.hasError) {
+            return Text(
+              snapshot.error.toString(),
+              style: const TextStyle(color: AppTheme.textSecondary),
+            );
+          }
+          if (habits.isEmpty) {
+            return const Text(
+              'No recommendations available yet. Continue and Habitz will assign smart defaults.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            );
+          }
+          return Column(
+            children: [
+              for (final habit in habits) ...[
+                OnboardingOptionCard(
+                  title: habit.title,
+                  subtitle: habit.description,
+                  selected: state.selectedHabits.contains(_habitEnumFromKey(habit.key)),
+                  onTap: () => controller.toggleHabit(_habitEnumFromKey(habit.key)),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ],
+          );
+        },
       ),
       onContinue: () => _goToStep(7),
       onBack: () => _goToStep(5),
@@ -271,21 +298,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _plansStep(OnboardingState state, OnboardingController controller) {
-    final repository = ref.watch(plansRepositoryProvider);
+    final recommendationsFuture = _ensureRecommendations(state, controller);
     return OnboardingStepCard(
       title: 'Recommended workout plans',
       subtitle: 'Based on your selections. Choose one or skip.',
       visual: _heroVisual(Icons.local_fire_department_rounded),
-      child: StreamBuilder<List<WorkoutPlanModel>>(
-        key: ValueKey('${state.sexVariant}-${state.fitnessLevel}-${state.equipment}'),
-        stream: repository.watchPlans(
-          sexVariant: state.sexVariant,
-          level: _mapFitnessLevel(state.fitnessLevel),
-          equipment: state.equipment,
-          goal: _mapPrimaryPlanGoal(state.selectedGoals),
-        ),
+      child: FutureBuilder<RemoteRecommendations>(
+        future: recommendationsFuture,
         builder: (context, snapshot) {
-          final plans = (snapshot.data ?? []).take(3).toList();
+          final plans = (snapshot.data?.plans ?? const <RemotePlanSummary>[]).take(4).toList();
+          if (recommendationsFuture == null) {
+            return const Text(
+              'Complete your core profile first to unlock plan recommendations.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting && plans.isEmpty) {
+            return const Center(child: CircularProgressIndicator(color: AppTheme.accent));
+          }
+          if (snapshot.hasError) {
+            return Text(
+              snapshot.error.toString(),
+              style: const TextStyle(color: AppTheme.textSecondary),
+            );
+          }
           if (plans.isEmpty) {
             return const Padding(
               padding: EdgeInsets.all(8),
@@ -300,7 +336,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               for (final plan in plans) ...[
                 OnboardingOptionCard(
                   title: plan.name,
-                  subtitle: '${plan.level.name} • ${plan.equipment.name}',
+                  subtitle: '${plan.level.name} • ${plan.equipment.name} • match ${plan.matchScore ?? '-'}',
                   selected: state.selectedPlanId == plan.id,
                   onTap: () => controller.setPlan(plan.id),
                 ),
@@ -398,7 +434,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 6),
             child: Text(
-              'Your onboarding preferences will be saved locally on this device so the dashboard, habits, and workouts can stay personalized.',
+              'Your onboarding preferences are saved to your account and synced into the mobile app so plans, habits, and workouts stay aligned.',
               style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
             ),
           ),
@@ -503,67 +539,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _persistOnboarding(OnboardingState state) async {
     final authSession = ref.read(authControllerProvider).valueOrNull;
-    final profile = UserProfile(
-      id: IdGenerator.deterministic('profile', ['main']),
-      name: authSession?.name ?? 'Athlete',
-      sexVariant: state.sexVariant ?? SexVariant.unisex,
-      primaryGoal: _mapPrimaryUserGoal(state.selectedGoals),
-      equipment: state.equipment ?? EquipmentType.home,
-      wakeTime: state.wakeTime,
-      onboardingCompleted: true,
-    );
-
-    await ref.read(profileControllerProvider.notifier).save(
-          profile,
-          activePlanId: state.selectedPlanId,
+    await ref.read(mobileBackendServiceProvider).completeOnboarding(
+          state,
+          athleteName: authSession?.name ?? 'Athlete',
         );
-
-    final habitRepo = ref.read(habitsRepositoryProvider);
-    final templates = <HabitRecommendation, ({String title, HabitType type, double target, String unit})>{
-      HabitRecommendation.water: (title: 'Drink 8 glasses of water', type: HabitType.count, target: 8, unit: 'glasses'),
-      HabitRecommendation.walk: (title: 'Walk 10k steps', type: HabitType.target, target: 10000, unit: 'steps'),
-      HabitRecommendation.morningStretch: (title: 'Morning stretch', type: HabitType.duration, target: 10, unit: 'min'),
-      HabitRecommendation.meditation: (title: 'Meditation', type: HabitType.duration, target: 10, unit: 'min'),
-      HabitRecommendation.sleep: (title: 'Sleep 7+ hours', type: HabitType.duration, target: 7, unit: 'hours'),
-      HabitRecommendation.workout: (title: 'Workout session', type: HabitType.binary, target: 1, unit: 'done'),
-    };
-
-    for (final habit in state.selectedHabits) {
-      final cfg = templates[habit]!;
-      await habitRepo.upsertHabit(
-        HabitModel(
-          id: IdGenerator.deterministic('habit', [cfg.title]),
-          title: cfg.title,
-          type: cfg.type,
-          targetValue: cfg.target,
-          unit: cfg.unit,
-          scheduleDays: const [1, 2, 3, 4, 5, 6, 7],
-          reminders: [state.wakeTime],
-          createdAt: DateTime.now(),
-          category: 'onboarding',
-        ),
-      );
-    }
-
-    final selectedPlanId = state.selectedPlanId ?? await _fallbackPlanId(state);
-    if (selectedPlanId != null) {
-      await ref.read(plansRepositoryProvider).setActivePlan(selectedPlanId);
-    }
-
-    ref.read(hasCompletedOnboardingProvider.notifier).state = true;
   }
 
-  Future<String?> _fallbackPlanId(OnboardingState state) async {
-    final plans = await ref
-        .read(plansRepositoryProvider)
-        .watchPlans(
-          sexVariant: state.sexVariant,
-          level: _mapFitnessLevel(state.fitnessLevel),
-          equipment: state.equipment,
-          goal: _mapPrimaryPlanGoal(state.selectedGoals),
-        )
-        .first;
-    return plans.isNotEmpty ? plans.first.id : null;
+  Future<RemoteRecommendations>? _ensureRecommendations(
+    OnboardingState state,
+    OnboardingController controller,
+  ) {
+    if (state.sexVariant == null || state.fitnessLevel == null || state.equipment == null || state.selectedGoals.isEmpty) {
+      return null;
+    }
+    final signature = [
+      state.selectedGoals.map((goal) => goal.name).toList()..sort(),
+      state.sexVariant?.name,
+      state.fitnessLevel?.name,
+      state.equipment?.name,
+      state.wakeTime,
+    ].toString();
+    if (_recommendationSignature == signature && _recommendationsFuture != null) {
+      return _recommendationsFuture;
+    }
+    _recommendationSignature = signature;
+    _recommendationsFuture = ref.read(mobileBackendServiceProvider).fetchRecommendations(state).then((result) {
+      final recommendedHabits = result.habits.map((item) => _habitEnumFromKey(item.key)).toSet();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        controller.setHabits(recommendedHabits);
+        if (result.plans.isNotEmpty && !result.plans.any((plan) => plan.id == state.selectedPlanId)) {
+          controller.setPlan(result.plans.first.id);
+        }
+      });
+      return result;
+    });
+    return _recommendationsFuture;
   }
 
   Widget _heroVisual(IconData icon) {
@@ -685,34 +696,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  UserGoal _mapPrimaryUserGoal(Set<OnboardingGoal> goals) {
-    if (goals.contains(OnboardingGoal.buildMuscle)) return UserGoal.strength;
-    if (goals.contains(OnboardingGoal.loseFat)) return UserGoal.fatLoss;
-    if (goals.contains(OnboardingGoal.improveHealth)) return UserGoal.mobility;
-    if (goals.contains(OnboardingGoal.buildDailyHabits)) return UserGoal.discipline;
-    if (goals.contains(OnboardingGoal.increaseEnergy)) return UserGoal.sleepReset;
-    return UserGoal.discipline;
-  }
-
-  PlanLevel? _mapFitnessLevel(FitnessLevel? level) {
-    switch (level) {
-      case FitnessLevel.beginner:
-        return PlanLevel.beginner;
-      case FitnessLevel.intermediate:
-        return PlanLevel.intermediate;
-      case FitnessLevel.advanced:
-        return PlanLevel.advanced;
-      case null:
-        return null;
+  HabitRecommendation _habitEnumFromKey(String key) {
+    switch (key) {
+      case 'water':
+        return HabitRecommendation.water;
+      case 'walk':
+        return HabitRecommendation.walk;
+      case 'stretch':
+        return HabitRecommendation.morningStretch;
+      case 'meditation':
+        return HabitRecommendation.meditation;
+      case 'sleep':
+        return HabitRecommendation.sleep;
+      default:
+        return HabitRecommendation.workout;
     }
   }
 
-  PlanGoal? _mapPrimaryPlanGoal(Set<OnboardingGoal> goals) {
-    if (goals.contains(OnboardingGoal.loseFat)) return PlanGoal.fatloss;
-    if (goals.contains(OnboardingGoal.buildMuscle)) return PlanGoal.strength;
-    if (goals.contains(OnboardingGoal.improveHealth)) return PlanGoal.mobility;
-    return null;
-  }
 }
 
 void _noop() {}

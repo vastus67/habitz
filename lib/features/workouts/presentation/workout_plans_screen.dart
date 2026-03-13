@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:habitz/core/database/database_provider.dart';
-import 'package:habitz/features/plans/domain/workout_models.dart';
-import 'package:habitz/features/profile/domain/user_profile.dart';
+import 'package:habitz/features/mobile_sync/mobile_backend_service.dart';
 import 'package:habitz/features/profile/providers/profile_provider.dart';
 import 'package:habitz/shared/widgets/plan_tile.dart';
 
@@ -13,19 +11,14 @@ class WorkoutPlansScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider).valueOrNull;
-    final repository = ref.watch(plansRepositoryProvider);
+    final backend = ref.watch(mobileBackendServiceProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Workout Plans')),
-      body: StreamBuilder<List<WorkoutPlanModel>>(
-        stream: repository.watchPlans(
-          sexVariant: profile?.sexVariant,
-          level: _mapLevel(profile),
-          equipment: profile?.equipment,
-          goal: _mapGoal(profile),
-        ),
+      body: FutureBuilder<List<RemotePlanSummary>>(
+        future: backend.fetchPlans(),
         builder: (context, snapshot) {
-          final plans = snapshot.data ?? const <WorkoutPlanModel>[];
+          final plans = snapshot.data ?? const <RemotePlanSummary>[];
           if (snapshot.connectionState == ConnectionState.waiting && plans.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -58,7 +51,7 @@ class WorkoutPlansScreen extends ConsumerWidget {
               }
               final plan = plans[index - 1];
               return PlanTile(
-                plan: plan,
+                plan: plan.toLocalModel(),
                 onTap: () => context.push('/workout-plan/${plan.id}'),
               );
             },
@@ -66,24 +59,5 @@ class WorkoutPlansScreen extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  PlanLevel? _mapLevel(UserProfile? profile) {
-    return null;
-  }
-
-  PlanGoal? _mapGoal(UserProfile? profile) {
-    if (profile == null) return null;
-    switch (profile.primaryGoal) {
-      case UserGoal.strength:
-        return PlanGoal.strength;
-      case UserGoal.fatLoss:
-        return PlanGoal.fatloss;
-      case UserGoal.mobility:
-      case UserGoal.sleepReset:
-        return PlanGoal.mobility;
-      case UserGoal.discipline:
-        return null;
-    }
   }
 }

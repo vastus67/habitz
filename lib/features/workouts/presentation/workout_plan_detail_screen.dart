@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:habitz/core/database/database_provider.dart';
-import 'package:habitz/features/plans/domain/workout_models.dart';
-import 'package:habitz/features/plans/providers/plans_provider.dart';
-import 'package:habitz/features/workouts/providers/workout_session_provider.dart';
+import 'package:habitz/features/mobile_sync/mobile_backend_service.dart';
 import 'package:habitz/shared/widgets/neo_card.dart';
 import 'package:habitz/theme/app_theme.dart';
 
@@ -16,12 +13,12 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final daysAsync = ref.watch(planDaysProvider(planId));
+    final backend = ref.watch(mobileBackendServiceProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Plan Detail')),
-      body: FutureBuilder(
-        future: ref.read(plansRepositoryProvider).getPlan(planId),
+      body: FutureBuilder<RemotePlanDetail>(
+        future: backend.fetchPlanDetail(planId),
         builder: (context, snapshot) {
           final plan = snapshot.data;
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -30,16 +27,14 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
           if (plan == null) {
             return const Center(child: Text('Plan not found'));
           }
+          final localPlan = plan.toLocalModel();
+          final grouped = <int, List<RemotePlanDay>>{};
+          for (final day in plan.days) {
+            final week = ((day.dayIndex - 1) ~/ plan.daysPerWeek) + 1;
+            grouped.putIfAbsent(week, () => []).add(day);
+          }
 
-          return daysAsync.when(
-            data: (days) {
-              final grouped = <int, List<WorkoutDayModel>>{};
-              for (final day in days) {
-                final week = ((day.dayIndex - 1) ~/ plan.daysPerWeek) + 1;
-                grouped.putIfAbsent(week, () => []).add(day);
-              }
-
-              return ListView(
+          return ListView(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                 children: [
                   NeoCard(
@@ -54,7 +49,7 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                SvgPicture.asset(plan.heroAsset, fit: BoxFit.cover),
+                                SvgPicture.asset(localPlan.heroAsset, fit: BoxFit.cover),
                                 const DecoratedBox(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
@@ -103,7 +98,7 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                       children: [
                         _stat('Duration', '${plan.durationWeeks}w'),
                         _stat('Days/week', '${plan.daysPerWeek}'),
-                        _stat('Workouts', '${days.length}'),
+                        _stat('Workouts', '${plan.days.length}'),
                       ],
                     ),
                   ),
@@ -114,7 +109,7 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                       foregroundColor: Colors.black,
                     ),
                     onPressed: () async {
-                      await ref.read(workoutSessionProvider.notifier).startPlan(plan.id);
+                      await backend.activatePlan(plan.id);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Plan started')),
@@ -131,6 +126,7 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Day ${day.dayIndex} ${day.title}'),
+                        subtitle: Text(day.focus, style: const TextStyle(color: AppTheme.textSecondary)),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push('/workout-day/${plan.id}/${day.id}'),
                       ),
@@ -138,10 +134,6 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                   ],
                 ],
               );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(child: Text(error.toString())),
-          );
         },
       ),
     );

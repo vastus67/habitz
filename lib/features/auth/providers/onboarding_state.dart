@@ -116,6 +116,8 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     state = state.copyWith(selectedHabits: habits);
   }
 
+  void setHabits(Set<HabitRecommendation> habits) => state = state.copyWith(selectedHabits: habits);
+
   void setPlan(String? planId) => state = state.copyWith(selectedPlanId: planId);
 
   void setReminderDaily(bool value) => state = state.copyWith(dailyReminders: value);
