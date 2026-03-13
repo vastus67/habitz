@@ -1,0 +1,51 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102A1F"/>
+      <stop offset="0.55" stop-color="#201A39"/>
+      <stop offset="1" stop-color="#0A1110"/>
+    </linearGradient>
+    <radialGradient id="g1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(260 170) rotate(33) scale(370 290)">
+      <stop stop-color="#C6FF00" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#C6FF00" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(930 130) rotate(10) scale(380 270)">
+      <stop stop-color="#9D4DFF" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#9D4DFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(720 530) rotate(4) scale(480 300)">
+      <stop stop-color="#2CE2FF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2CE2FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="700" fill="url(#bg1)"/>
+  <rect width="1200" height="700" fill="url(#g1)"/>
+  <rect width="1200" height="700" fill="url(#g2)"/>
+  <rect width="1200" height="700" fill="url(#g3)"/>
+  <path d="M0 590L1200 490V700H0V590Z" fill="#0A0F0E"/>
+  <g fill="#131717">
+    <circle cx="230" cy="410" r="20"/>
+    <rect x="214" y="435" width="32" height="88" rx="14"/>
+    <path d="M222 455L130 510L144 530L234 478Z"/>
+    <path d="M242 450L322 405L332 422L252 470Z"/>
+    <path d="M222 524L142 610L165 620L236 540Z"/>
+    <path d="M244 522L334 588L349 570L253 506Z"/>
+
+    <rect x="505" y="314" width="192" height="14" rx="7"/>
+    <circle cx="500" cy="321" r="24"/>
+    <circle cx="706" cy="321" r="24"/>
+    <circle cx="604" cy="386" r="20"/>
+    <rect x="588" y="410" width="32" height="90" rx="14"/>
+    <path d="M592 434L535 352L552 341L608 423Z"/>
+    <path d="M618 434L675 352L658 341L600 423Z"/>
+    <path d="M594 500L566 606L588 612L612 507Z"/>
+    <path d="M614 500L642 606L620 612L596 507Z"/>
+
+    <circle cx="930" cy="395" r="19"/>
+    <rect x="914" y="420" width="32" height="82" rx="14"/>
+    <path d="M924 437L838 414L832 434L918 458Z"/>
+    <path d="M942 437L1028 416L1032 436L946 458Z"/>
+    <path d="M920 500L842 558L856 577L930 520Z"/>
+    <path d="M940 500L1043 516L1046 538L946 524Z"/>
+  </g>
+</svg>
