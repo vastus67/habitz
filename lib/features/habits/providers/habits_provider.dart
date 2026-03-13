@@ -52,6 +52,10 @@ class HabitsController {
   }
 
   Future<void> logDone(HabitModel habit, {double? value}) async {
+    await logProgress(habit, value ?? habit.targetValue);
+  }
+
+  Future<void> logProgress(HabitModel habit, double value) async {
     final now = DateTime.now();
     final id = IdGenerator.deterministic(
       'habitLog',
@@ -62,8 +66,8 @@ class HabitsController {
             id: id,
             habitId: habit.id,
             date: now,
-            value: value ?? habit.targetValue,
-            completed: true,
+            value: value,
+            completed: value >= habit.targetValue,
           ),
         );
   }

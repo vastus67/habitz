@@ -9,11 +9,13 @@ class HabitTile extends StatelessWidget {
     required this.habit,
     required this.onLog,
     this.onDelete,
+    this.onTrackSteps,
   });
 
   final HabitModel habit;
   final VoidCallback onLog;
   final VoidCallback? onDelete;
+  final VoidCallback? onTrackSteps;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +44,12 @@ class HabitTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onTrackSteps != null)
+            IconButton(
+              tooltip: 'Track steps',
+              onPressed: onTrackSteps,
+              icon: const Icon(Icons.directions_walk, color: AppTheme.accent),
+            ),
           IconButton(
             onPressed: onLog,
             icon: const Icon(Icons.check_circle_outline, color: AppTheme.accent),

@@ -21,6 +21,9 @@ class HabitsScreen extends ConsumerWidget {
             return HabitTile(
               habit: habit,
               onLog: () => ref.read(habitsControllerProvider).logDone(habit),
+              onTrackSteps: _isWalkingHabit(habit)
+                  ? () => _showStepsTrackerDialog(context, ref, habit)
+                  : null,
               onDelete: () => ref.read(habitsControllerProvider).deleteHabit(habit.id),
             );
           },
@@ -36,6 +39,56 @@ class HabitsScreen extends ConsumerWidget {
         onPressed: () => _showCreateHabitSheet(context, ref),
         label: const Text('New Habit'),
         icon: const Icon(Icons.add),
+      ),
+    );
+  }
+
+
+
+  bool _isWalkingHabit(HabitModel habit) {
+    final title = habit.title.toLowerCase();
+    final unit = habit.unit.toLowerCase();
+    final category = habit.category?.toLowerCase() ?? '';
+    return title.contains('walk') || unit.contains('step') || category.contains('walk');
+  }
+
+  Future<void> _showStepsTrackerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    HabitModel habit,
+  ) async {
+    final controller = TextEditingController(text: habit.targetValue.toStringAsFixed(0));
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Log steps for ${habit.title}'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: 'Steps (${habit.unit})'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final value = double.tryParse(controller.text.trim());
+              if (value == null || value < 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Enter a valid step count.')),
+                );
+                return;
+              }
+              await ref.read(habitsControllerProvider).logProgress(habit, value);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
